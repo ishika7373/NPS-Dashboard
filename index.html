@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spinny NPS Automation Hub</title>
+  
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables & Theme Constants (Strict Color Scheme, No Gradients, No Shadows) */
+    :root {
+      --primary: #E8272A;
+      --primary-hover: #D12023;
+      --text-primary: #1A1A1A;
+      --text-secondary: #666666;
+      --bg-surface: #F5F5F5;
+      --bg-white: #FFFFFF;
+      --border-color: #DDDDDD;
+      
+      /* Status Colors (Subtle backgrounds and text, flat, clean borders) */
+      --high-bg: #FEE2E2;
+      --high-text: #B91C1C;
+      --high-border: #FCA5A5;
+      
+      --medium-bg: #FEF3C7;
+      --medium-text: #B45309;
+      --medium-border: #FCD34D;
+      
+      --low-bg: #F3F4F6;
+      --low-text: #374151;
+      --low-border: #D1D5DB;
+      
+      --positive-bg: #D1FAE5;
+      --positive-text: #047857;
+      --positive-border: #6EE7B7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-white);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 80px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header Styling */
+    .app-header {
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-white);
+    }
+    
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      text-transform: lowercase;
+    }
+
+    .logo .dot {
+      color: var(--primary);
+    }
+
+    .logo .sub-brand {
+      font-weight: 400;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-left: 1px solid var(--border-color);
+      padding-left: 12px;
+      margin-left: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .current-time-badge {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background-color: var(--bg-surface);
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Navigation Tab Bar */
+    .app-nav {
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-white);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 32px;
+      padding: 0 24px;
+    }
+
+    .nav-tab {
+      background: none;
+      border: none;
+      padding: 16px 0;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-tab.active {
+      color: var(--text-primary);
+    }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary);
+    }
+
+    .badge {
+      background-color: var(--primary);
+      color: var(--bg-white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 2px;
+      line-height: 1;
+    }
+
+    /* Tab Contents Toggle */
+    .tab-content {
+      display: none;
+      padding: 32px 0;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Common Components: Section Heading */
+    .section-header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* SECTION 1: INBOX STYLES */
+    .input-box {
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .input-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .review-textarea {
+      width: 100%;
+      height: 120px;
+      padding: 16px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-surface);
+      resize: vertical;
+      margin-bottom: 16px;
+      outline: none;
+    }
+
+    .review-textarea:focus {
+      background-color: var(--bg-white);
+      border-color: var(--text-primary);
+    }
+
+    .input-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .quick-samples {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .quick-samples-title {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .sample-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 2px 4px;
+      font-family: inherit;
+    }
+
+    .sample-btn:hover {
+      text-decoration: underline;
+    }
+
+    .primary-btn {
+      background-color: var(--primary);
+      color: var(--bg-white);
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .primary-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .primary-btn:disabled {
+      background-color: var(--border-color);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    /* Inbox Feed & Filters */
+    .feed-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filters-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      width: 200px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--text-primary);
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-white);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      border-color: var(--text-primary);
+    }
+
+    /* Cards */
+    .review-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .review-card {
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-white);
+      padding: 24px;
+      position: relative;
+    }
+
+    .review-card.resolved {
+      opacity: 0.65;
+      background-color: var(--bg-surface);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Pills & Badges */
+    .pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .pill.high-priority {
+      background-color: var(--high-bg);
+      color: var(--high-text);
+      border: 1px solid var(--high-border);
+    }
+
+    .pill.medium-priority {
+      background-color: var(--medium-bg);
+      color: var(--medium-text);
+      border: 1px solid var(--medium-border);
+    }
+
+    .pill.low-priority {
+      background-color: var(--low-bg);
+      color: var(--low-text);
+      border: 1px solid var(--low-border);
+    }
+
+    .pill.positive-priority {
+      background-color: var(--positive-bg);
+      color: var(--positive-text);
+      border: 1px solid var(--positive-border);
+    }
+
+    .badge-priority {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-priority.HIGH {
+      color: var(--high-text);
+      border-color: var(--high-border);
+    }
+    .badge-priority.MEDIUM {
+      color: var(--medium-text);
+      border-color: var(--medium-border);
+    }
+    .badge-priority.LOW {
+      color: var(--low-text);
+      border-color: var(--border-color);
+    }
+
+    .source-badge {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 6px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .confidence-score {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-body {
+      margin-bottom: 20px;
+    }
+
+    .ai-summary-box {
+      background-color: var(--bg-surface);
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .customer-review-box {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .review-text-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .review-text-content {
+      white-space: pre-wrap;
+    }
+
+    .review-text-content.truncated {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .toggle-expand-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 6px;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .toggle-expand-btn:hover {
+      text-decoration: underline;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .routed-info {
+      font-weight: 500;
+    }
+
+    .routed-info strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .sla-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .sla-indicator.at-risk {
+      color: var(--high-text);
+      font-weight: 700;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      background-color: var(--bg-white);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .action-btn:hover {
+      background-color: var(--bg-surface);
+    }
+
+    .action-btn.delete {
+      color: var(--high-text);
+      border-color: var(--high-border);
+    }
+
+    .action-btn.delete:hover {
+      background-color: var(--high-bg);
+    }
+
+    /* SECTION 2: DASHBOARD STYLES */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+
+    .metric-title {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .metric-subtext {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .dashboard-details-container {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-details-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .dashboard-panel {
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Horizontal CSS Bar Chart */
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-row {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .chart-label {
+      width: 180px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chart-bar-container {
+      flex-grow: 1;
+      height: 16px;
+      background-color: var(--bg-surface);
+      margin: 0 16px;
+      position: relative;
+    }
+
+    .chart-bar {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.1, 0.8, 0.2, 1);
+    }
+
+    .chart-percentage {
+      width: 50px;
+      text-align: right;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Recent Activity List */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .activity-item {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      border-bottom: 1px solid var(--bg-surface);
+      padding-bottom: 10px;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .activity-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .activity-time {
+      font-weight: 500;
+    }
+
+    .activity-desc {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .activity-desc strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* SECTION 3: ROUTING RULES STYLES */
+    .rules-table-container {
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .rules-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .rules-table th {
+      background-color: var(--bg-surface);
+      color: var(--text-secondary);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .rules-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .rules-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Form controls for inline editing */
+    .edit-input {
+      width: 100%;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-surface);
+      outline: none;
+    }
+
+    .edit-input:focus {
+      background-color: var(--bg-white);
+      border-color: var(--text-primary);
+    }
+
+    .edit-input.num-input {
+      width: 80px;
+    }
+
+    .edit-select {
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-white);
+      outline: none;
+    }
+
+    .rule-tag-name {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* SECTION 4: SETTINGS STYLES */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .settings-panel {
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+
+    .settings-form-group {
+      margin-bottom: 20px;
+    }
+
+    .settings-form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .settings-form-group input[type="text"],
+    .settings-form-group input[type="password"],
+    .settings-form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-surface);
+      outline: none;
+    }
+
+    .settings-form-group input:focus,
+    .settings-form-group select:focus {
+      background-color: var(--bg-white);
+      border-color: var(--text-primary);
+    }
+
+    .settings-form-group textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.6;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-surface);
+      resize: vertical;
+      outline: none;
+    }
+
+    .settings-form-group textarea:focus {
+      background-color: var(--bg-white);
+      border-color: var(--text-primary);
+    }
+
+    .form-tip {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .export-card {
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .export-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .export-card p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .secondary-btn {
+      background-color: var(--bg-white);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .secondary-btn:hover {
+      background-color: var(--bg-surface);
+    }
+
+    .secondary-btn.danger {
+      color: var(--high-text);
+      border-color: var(--high-border);
+    }
+
+    .secondary-btn.danger:hover {
+      background-color: var(--high-bg);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background-color: var(--text-primary);
+      color: var(--bg-white);
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      animation: slideIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .toast.error {
+      background-color: var(--high-bg);
+      color: var(--high-text);
+      border-color: var(--high-border);
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo">
+        spinny<span class="dot">.</span><span class="sub-brand">NPS Automation</span>
+      </div>
+      <div class="current-time-badge" id="current-time-badge">11 Jun 2026, 00:03</div>
+    </div>
+  </header>
+
+  <!-- Navigation Tab Bar -->
+  <nav class="app-nav">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="inbox" id="tab-btn-inbox">
+        Inbox <span class="badge" id="inbox-count-badge">5</span>
+      </button>
+      <button class="nav-tab" data-tab="dashboard" id="tab-btn-dashboard">Dashboard</button>
+      <button class="nav-tab" data-tab="routing" id="tab-btn-routing">Routing Rules</button>
+      <button class="nav-tab" data-tab="settings" id="tab-btn-settings">Settings</button>
+    </div>
+  </nav>
+
+  <!-- Main Content Space -->
+  <main class="container">
+    
+    <!-- SECTION 1: INBOX VIEW -->
+    <section id="tab-content-inbox" class="tab-content active">
+      <div class="input-box">
+        <label for="review-input">Classify New Customer Review</label>
+        <textarea id="review-input" class="review-textarea" placeholder="Paste a customer review here..."></textarea>
+        
+        <div class="input-actions">
+          <div class="quick-samples">
+            <span class="quick-samples-title">Insert sample review:</span>
+            <button class="sample-btn" onclick="insertSample(1)">Overheating (Warranty)</button>
+            <span style="color: var(--border-color)">|</span>
+            <button class="sample-btn" onclick="insertSample(2)">RC Delay</button>
+            <span style="color: var(--border-color)">|</span>
+            <button class="sample-btn" onclick="insertSample(3)">No CX Response</button>
+            <span style="color: var(--border-color)">|</span>
+            <button class="sample-btn" onclick="insertSample(4)">5-Day Breach</button>
+            <span style="color: var(--border-color)">|</span>
+            <button class="sample-btn" onclick="insertSample(5)">Smooth Buying</button>
+          </div>
+          <button id="classify-btn" class="primary-btn" onclick="handleClassifyAndRoute()">
+            <span id="btn-text">Classify and route</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="feed-controls">
+        <h3 class="section-title" id="inbox-feed-header">Classified Feed (5)</h3>
+        
+        <div class="filters-group">
+          <input type="text" id="search-box" class="search-input" placeholder="Search reviews..." oninput="renderInbox()">
+          
+          <select id="tag-filter" class="filter-select" onchange="renderInbox()">
+            <option value="ALL">All Complaint Tags</option>
+            <option value="WARRANTY_DISPUTE">WARRANTY_DISPUTE</option>
+            <option value="RC_DELAY">RC_DELAY</option>
+            <option value="EM_UNRESPONSIVE">EM_UNRESPONSIVE</option>
+            <option value="QUALITY_MISMATCH">QUALITY_MISMATCH</option>
+            <option value="5DAY_BREACH">5DAY_BREACH</option>
+            <option value="POSITIVE">POSITIVE</option>
+          </select>
+          
+          <select id="priority-filter" class="filter-select" onchange="renderInbox()">
+            <option value="ALL">All Priorities</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+          
+          <select id="status-filter" class="filter-select" onchange="renderInbox()">
+            <option value="ALL">All Statuses</option>
+            <option value="OPEN">Open Only</option>
+            <option value="RESOLVED">Resolved Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Feed of review cards -->
+      <div class="review-cards-list" id="reviews-list"></div>
+    </section>
+
+    <!-- SECTION 2: DASHBOARD VIEW -->
+    <section id="tab-content-dashboard" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-title">Performance Dashboard</h3>
+        <span class="section-subtitle">Key metrics aggregated from active database</span>
+      </div>
+
+      <!-- Metrics Panel Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">Total Reviews Processed</div>
+          <div class="metric-value" id="metric-total">5</div>
+          <div class="metric-subtext">Classified in current database</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">High Priority Open</div>
+          <div class="metric-value" id="metric-high-open" style="color: var(--primary);">2</div>
+          <div class="metric-subtext">HIGH tickets needing resolution</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Avg Confidence Score</div>
+          <div class="metric-value" id="metric-avg-conf">91%</div>
+          <div class="metric-subtext">Overall classifier confidence</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">SLA Breach Risk</div>
+          <div class="metric-value" id="metric-sla-risk">1</div>
+          <div class="metric-subtext">Open tickets with &lt;= 4h remaining</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Most Common Tag</div>
+          <div class="metric-value" id="metric-common-tag" style="font-size: 16px; font-weight: 700; margin-top: 10px; margin-bottom: 10px;">WARRANTY_DISPUTE</div>
+          <div class="metric-subtext">Tag with highest volume count</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Positive Rate</div>
+          <div class="metric-value" id="metric-positive-rate">20%</div>
+          <div class="metric-subtext">Feedback classified as POSITIVE</div>
+        </div>
+      </div>
+
+      <div class="dashboard-details-container">
+        <!-- Distribution Bar Chart -->
+        <div class="dashboard-panel">
+          <h4 class="panel-title">Complaint Tag Distribution</h4>
+          <div class="bar-chart" id="bar-chart-container"></div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="dashboard-panel">
+          <h4 class="panel-title">Recent Activities</h4>
+          <div class="activity-list" id="activity-feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ROUTING RULES VIEW -->
+    <section id="tab-content-routing" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-title">Routing & SLA Rules</h3>
+        <span class="section-subtitle">Map tags to operational teams, priority metrics, and deadlines</span>
+      </div>
+
+      <div class="rules-table-container">
+        <table class="rules-table">
+          <thead>
+            <tr>
+              <th style="width: 25%">Tag Name</th>
+              <th style="width: 15%">Priority</th>
+              <th style="width: 30%">Routed To Team</th>
+              <th style="width: 15%">SLA (Hours)</th>
+              <th style="width: 15%; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="routing-rules-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: SETTINGS VIEW -->
+    <section id="tab-content-settings" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-title">System Configuration</h3>
+        <span class="section-subtitle">Manage classification parameters and data structures</span>
+      </div>
+
+      <div class="settings-grid">
+        <!-- AI Engine Configuration -->
+        <div class="settings-panel">
+          <h4 class="panel-title" style="margin-bottom: 20px;">AI Classification Engine</h4>
+          
+          <div class="settings-form-group">
+            <label for="settings-api-key">Anthropic API Key</label>
+            <input type="password" id="settings-api-key" value="">
+            <div class="form-tip">Pre-filled with session details. Leave blank to let the environment handle auth automatically.</div>
+          </div>
+
+          <div class="settings-form-group">
+            <label for="settings-model">Model Selector</label>
+            <select id="settings-model">
+              <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514</option>
+              <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
+              <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>
+              <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
+            </select>
+          </div>
+
+          <div class="settings-form-group">
+            <label for="settings-prompt">Classification System Prompt</label>
+            <textarea id="settings-prompt"></textarea>
+            <div class="form-tip">Instructions to force JSON responses containing category, priority, and routed details.</div>
+          </div>
+
+          <button class="primary-btn" onclick="saveSettings()">Save Settings</button>
+        </div>
+
+        <!-- System Administration & Exports -->
+        <div class="settings-panel">
+          <h4 class="panel-title" style="margin-bottom: 20px;">Export & Data Utilities</h4>
+          
+          <div class="export-card">
+            <h4>Export Inbox Database</h4>
+            <p>Download all classified customer reviews currently in memory as a standardized CSV file format.</p>
+            <button class="secondary-btn" style="width: 100%;" onclick="exportInboxCSV()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export Inbox as CSV
+            </button>
+          </div>
+
+          <div class="export-card">
+            <h4>Copy Routing Scheme</h4>
+            <p>Copy the active routing rules configuration table mapping in JSON format to your clipboard.</p>
+            <button class="secondary-btn" style="width: 100%;" onclick="copyRoutingJSON()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Routing Rules as JSON
+            </button>
+          </div>
+
+          <div class="export-card" style="border-color: var(--high-border); background-color: #FFF5F5;">
+            <h4 style="color: var(--high-text);">Developer Operations</h4>
+            <p style="color: var(--high-text);">Wipe custom rules, settings, and reviews to restore preloaded defaults.</p>
+            <button class="secondary-btn danger" style="width: 100%;" onclick="resetToDefaults()">Wipe & Reset Application State</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification Overlay Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Application Logic -->
+  <script>
+    // System Constants
+    const SAMPLE_REVIEWS = {
+      1: "Within 2 days of buying the car, overheating started. In just 3 months wiring problems, faulty indicators, engine vibration, loose bonnet, doors not closing properly. The warranty was useless.",
+      2: "Spinny took nearly 180 days to get my RC transferred. How low can post-sales service stoop?",
+      3: "The experience manager won't communicate any issues and does not support you after purchasing.",
+      4: "I raised a replacement request on day 2. Spinny responded on day 6, making me technically ineligible for the 5-day guarantee. I raised 6 tickets.",
+      5: "The team was really nice and cooperative throughout the process. Very smooth buying experience overall."
+    };
+
+    const DEFAULT_ROUTING_RULES = [
+      { tag: "WARRANTY_DISPUTE", priority: "HIGH", routed_to: "Warranty Ops", sla_hours: 24 },
+      { tag: "RC_DELAY", priority: "MEDIUM", routed_to: "Documentation Team", sla_hours: 48 },
+      { tag: "EM_UNRESPONSIVE", priority: "MEDIUM", routed_to: "Customer Experience Lead", sla_hours: 12 },
+      { tag: "QUALITY_MISMATCH", priority: "LOW", routed_to: "Hub Manager", sla_hours: 24 },
+      { tag: "5DAY_BREACH", priority: "HIGH", routed_to: "CS Lead + Legal", sla_hours: 4 }
+    ];
+
+    const DEFAULT_SYSTEM_PROMPT = `You are a complaint classification engine for Spinny, India's used car platform. Read the customer review and return ONLY a JSON object with these exact keys: tag (one of: WARRANTY_DISPUTE, RC_DELAY, EM_UNRESPONSIVE, QUALITY_MISMATCH, 5DAY_BREACH, POSITIVE), confidence (a number 0 to 100), sla_hours (24 for WARRANTY_DISPUTE, 48 for RC_DELAY, 12 for EM_UNRESPONSIVE, 24 for QUALITY_MISMATCH, 4 for 5DAY_BREACH, 0 for POSITIVE), routed_to (Warranty Ops for WARRANTY_DISPUTE, Documentation Team for RC_DELAY, Customer Experience Lead for EM_UNRESPONSIVE, Hub Manager for QUALITY_MISMATCH, CS Lead + Legal for 5DAY_BREACH, No action for POSITIVE), priority (HIGH for 5DAY_BREACH and WARRANTY_DISPUTE, MEDIUM for RC_DELAY and EM_UNRESPONSIVE, LOW for QUALITY_MISMATCH and POSITIVE), summary (one sentence summary of the complaint, no em dashes). Return only the JSON, no markdown, no preamble.`;
+
+    // Static Base Historical Data to match target percentages:
+    // WARRANTY_DISPUTE 38%, RC_DELAY 24%, EM_UNRESPONSIVE 19%, QUALITY_MISMATCH 12%, 5DAY_BREACH 7%
+    // 37, 23, 18, 12, 6 base numbers + 1 added for preloads yields exactly 38, 24, 19, 12, 7 (Total 100)
+    const BASE_HISTORICAL_COUNTS = {
+      WARRANTY_DISPUTE: 37,
+      RC_DELAY: 23,
+      EM_UNRESPONSIVE: 18,
+      QUALITY_MISMATCH: 12,
+      5DAY_BREACH: 6
+    };
+
+    // State Variables
+    let state = {
+      reviews: [],
+      routingRules: [],
+      settings: {
+        apiKey: "",
+        model: "claude-sonnet-4-20250514",
+        systemPrompt: DEFAULT_SYSTEM_PROMPT
+      },
+      editingRuleTag: null // Tracks tag currently being edited inline
+    };
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      initUI();
+      startRealTimeTimers();
+    });
+
+    // Load state from localStorage or set defaults
+    function loadState() {
+      // 1. Settings
+      const savedSettings = localStorage.getItem('spinny_nps_settings');
+      if (savedSettings) {
+        state.settings = JSON.parse(savedSettings);
+      } else {
+        state.settings = {
+          apiKey: "Using session key",
+          model: "claude-sonnet-4-20250514",
+          systemPrompt: DEFAULT_SYSTEM_PROMPT
+        };
+        localStorage.setItem('spinny_nps_settings', JSON.stringify(state.settings));
+      }
+
+      // Fill settings form UI elements
+      document.getElementById('settings-api-key').value = state.settings.apiKey;
+      document.getElementById('settings-model').value = state.settings.model;
+      document.getElementById('settings-prompt').value = state.settings.systemPrompt;
+
+      // 2. Routing Rules
+      const savedRules = localStorage.getItem('spinny_nps_routing_rules');
+      if (savedRules) {
+        state.routingRules = JSON.parse(savedRules);
+      } else {
+        state.routingRules = JSON.parse(JSON.stringify(DEFAULT_ROUTING_RULES));
+        localStorage.setItem('spinny_nps_routing_rules', JSON.stringify(state.routingRules));
+      }
+
+      // 3. Reviews (Preload 5 sample reviews if none exist)
+      const savedReviews = localStorage.getItem('spinny_nps_reviews');
+      if (savedReviews) {
+        state.reviews = JSON.parse(savedReviews);
+      } else {
+        // Build preload review array with deterministic timestamps relative to current moment
+        const now = Date.now();
+        state.reviews = [
+          {
+            id: "preload-1",
+            review_text: SAMPLE_REVIEWS[1],
+            tag: "WARRANTY_DISPUTE",
+            confidence: 95,
+            sla_hours: 24,
+            routed_to: "Warranty Ops",
+            priority: "HIGH",
+            summary: "Defects surfaced within 2 days of vehicle purchase and the warranty was useless.",
+            timestamp: new Date(now - 3600000 * 2).toISOString(), // 2 hours ago
+            resolved: false,
+            source: "Preloaded System Data"
+          },
+          {
+            id: "preload-2",
+            review_text: SAMPLE_REVIEWS[2],
+            tag: "RC_DELAY",
+            confidence: 94,
+            sla_hours: 48,
+            routed_to: "Documentation Team",
+            priority: "MEDIUM",
+            summary: "Extremely long wait time of nearly 180 days for the vehicle RC transfer.",
+            timestamp: new Date(now - 3600000 * 5).toISOString(), // 5 hours ago
+            resolved: false,
+            source: "Preloaded System Data"
+          },
+          {
+            id: "preload-3",
+            review_text: SAMPLE_REVIEWS[3],
+            tag: "EM_UNRESPONSIVE",
+            confidence: 92,
+            sla_hours: 12,
+            routed_to: "Customer Experience Lead",
+            priority: "MEDIUM",
+            summary: "Lack of communication and support from the post-purchase experience manager.",
+            timestamp: new Date(now - 3600000 * 6).toISOString(), // 6 hours ago
+            resolved: false,
+            source: "Preloaded System Data"
+          },
+          {
+            id: "preload-4",
+            review_text: SAMPLE_REVIEWS[4],
+            tag: "5DAY_BREACH",
+            confidence: 98,
+            sla_hours: 4,
+            routed_to: "CS Lead + Legal",
+            priority: "HIGH",
+            summary: "Breached the 5-day guarantee policy after a delayed 6th-day response by Spinny.",
+            timestamp: new Date(now - 3600000 * 1).toISOString(), // 1 hour ago
+            resolved: false,
+            source: "Preloaded System Data"
+          },
+          {
+            id: "preload-5",
+            review_text: SAMPLE_REVIEWS[5],
+            tag: "POSITIVE",
+            confidence: 76,
+            sla_hours: 0,
+            routed_to: "No action",
+            priority: "LOW",
+            summary: "Satisfactory and cooperative experience throughout the purchase process.",
+            timestamp: new Date(now - 3600000 * 12).toISOString(), // 12 hours ago
+            resolved: false,
+            source: "Preloaded System Data"
+          }
+        ];
+        localStorage.setItem('spinny_nps_reviews', JSON.stringify(state.reviews));
+      }
+    }
+
+    // UI Configuration & Rendering
+    function initUI() {
+      // 1. Navigation Tab Switching
+      const tabs = document.querySelectorAll('.nav-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.getAttribute('data-tab');
+          
+          // Toggle navigation tab active classes
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Toggle content visibility
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+          });
+          document.getElementById(`tab-content-${targetTab}`).classList.add('active');
+
+          // Redraw elements when dashboard is viewed to trigger animations
+          if (targetTab === 'dashboard') {
+            renderDashboard();
+          } else if (targetTab === 'routing') {
+            renderRoutingRules();
+          } else if (targetTab === 'inbox') {
+            renderInbox();
+          }
+        });
+      });
+
+      // Render all views
+      renderInbox();
+      renderDashboard();
+      renderRoutingRules();
+      updateGlobalBadges();
+      updateTimeBadge();
+    }
+
+    // Update time displays and calculate tick counts
+    function updateTimeBadge() {
+      // Render clean timestamp format representing the exact system timezone format: "11 Jun 2026, 00:03:59"
+      const now = new Date();
+      const options = { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+      };
+      document.getElementById('current-time-badge').innerText = now.toLocaleString('en-GB', options).replace(',', '');
+    }
+
+    function startRealTimeTimers() {
+      // Tick clock every second
+      setInterval(updateTimeBadge, 1000);
+
+      // Refresh SLA remaining countdown displays every 30 seconds
+      setInterval(() => {
+        updateSLADeadlineDisplays();
+        updateDashboardSLAIndicatorsOnly();
+      }, 30000);
+    }
+
+    // Update count indicators
+    function updateGlobalBadges() {
+      const inboxCount = state.reviews.filter(r => !r.resolved).length;
+      document.getElementById('inbox-count-badge').innerText = inboxCount;
+    }
+
+    // Show sample reviews in form inputs
+    function insertSample(index) {
+      const text = SAMPLE_REVIEWS[index];
+      if (text) {
+        document.getElementById('review-input').value = text;
+        showToast("Sample text inserted.");
+      }
+    }
+
+    // RENDER: INBOX
+    function renderInbox() {
+      const listContainer = document.getElementById('reviews-list');
+      const searchQuery = document.getElementById('search-box').value.toLowerCase().trim();
+      const tagFilter = document.getElementById('tag-filter').value;
+      const priorityFilter = document.getElementById('priority-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
+
+      // Filter reviews list
+      let filtered = state.reviews.filter(review => {
+        const textMatch = review.review_text.toLowerCase().includes(searchQuery) || 
+                          review.summary.toLowerCase().includes(searchQuery);
+        const tagMatch = tagFilter === 'ALL' || review.tag === tagFilter;
+        const priorityMatch = priorityFilter === 'ALL' || review.priority === priorityFilter;
+        
+        let statusMatch = true;
+        if (statusFilter === 'OPEN') statusMatch = !review.resolved;
+        else if (statusFilter === 'RESOLVED') statusMatch = review.resolved;
+
+        return textMatch && tagMatch && priorityMatch && statusMatch;
+      });
+
+      // Sort: HIGH priority first, then MEDIUM, then LOW
+      const priorityWeights = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+      filtered.sort((a, b) => {
+        // Primary sort: Priority (descending)
+        const diff = (priorityWeights[b.priority] || 0) - (priorityWeights[a.priority] || 0);
+        if (diff !== 0) return diff;
+        // Secondary sort: Date created (descending)
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+
+      // Update Header Text
+      document.getElementById('inbox-feed-header').innerText = `Classified Feed (${filtered.length})`;
+
+      // Render Cards
+      if (filtered.length === 0) {
+        listContainer.innerHTML = `
+          <div style="border: 1px solid var(--border-color); padding: 40px; text-align: center; color: var(--text-secondary); background: var(--bg-white);">
+            No matching customer reviews found in this folder.
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map(review => {
+        const priorityClass = review.tag === 'POSITIVE' ? 'positive-priority' : `${review.priority.toLowerCase()}-priority`;
+        const dateStr = new Date(review.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        // Calculate SLA Target Date and dynamic countdown
+        let slaDetailsHTML = '';
+        let atRiskClass = '';
+        
+        if (review.sla_hours > 0) {
+          const createdTime = new Date(review.timestamp).getTime();
+          const targetTime = createdTime + (review.sla_hours * 3600000);
+          const now = Date.now();
+          const targetDateStr = new Date(targetTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+          
+          if (review.resolved) {
+            slaDetailsHTML = `Target Deadline: ${targetDateStr} (Resolved)`;
+          } else if (now > targetTime) {
+            slaDetailsHTML = `Target Deadline: ${targetDateStr} <span style="font-weight: 700; color: var(--high-text);">[BREACHED]</span>`;
+            atRiskClass = 'at-risk';
+          } else {
+            const diffMs = targetTime - now;
+            const hoursLeft = Math.floor(diffMs / 3600000);
+            const minsLeft = Math.floor((diffMs % 3600000) / 60000);
+            
+            let timeStr = `${hoursLeft}h ${minsLeft}m remaining`;
+            if (hoursLeft === 0) {
+              timeStr = `${minsLeft}m remaining`;
+            }
+            
+            slaDetailsHTML = `Deadline: ${targetDateStr} (${timeStr})`;
+            if (hoursLeft <= 4) {
+              atRiskClass = 'at-risk';
+            }
+          }
+        } else {
+          slaDetailsHTML = 'SLA: No Action Required';
+        }
+
+        const isCollapsed = localStorage.getItem(`expanded_${review.id}`) !== 'true';
+
+        return `
+          <div class="review-card ${review.resolved ? 'resolved' : ''}" id="card-${review.id}">
+            <div class="card-header">
+              <div class="card-header-left">
+                <span class="pill ${priorityClass}">${review.tag}</span>
+                <span class="badge-priority ${review.priority}">${review.priority}</span>
+                <span class="source-badge">${review.source || 'AI Classifier'}</span>
+              </div>
+              <div class="card-header-right">
+                <span>Confidence: <span class="confidence-score">${review.confidence}%</span></span>
+                <span>${dateStr}</span>
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <div class="ai-summary-box">
+                AI Summary: ${review.summary}
+              </div>
+              <div class="customer-review-box">
+                <div class="review-text-title">Customer Review Text</div>
+                <div class="review-text-content ${isCollapsed ? 'truncated' : ''}" id="review-text-${review.id}">${review.review_text}</div>
+                <button class="toggle-expand-btn" onclick="toggleReviewExpand('${review.id}')" id="expand-btn-${review.id}">
+                  ${isCollapsed ? 'Show more' : 'Show less'}
+                </button>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="routed-info">
+                Routed to: <strong>${review.routed_to}</strong>
+              </div>
+              <div class="sla-indicator ${atRiskClass}" id="sla-display-${review.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>${slaDetailsHTML}</span>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn" onclick="toggleResolveReview('${review.id}')">
+                  ${review.resolved ? 'Reopen Ticket' : 'Mark Resolved'}
+                </button>
+                <button class="action-btn delete" onclick="deleteReview('${review.id}')">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Toggle card read status (expand review block)
+    function toggleReviewExpand(id) {
+      const textContainer = document.getElementById(`review-text-${id}`);
+      const btn = document.getElementById(`expand-btn-${id}`);
+      const isCurrentlyCollapsed = textContainer.classList.contains('truncated');
+
+      if (isCurrentlyCollapsed) {
+        textContainer.classList.remove('truncated');
+        btn.innerText = 'Show less';
+        localStorage.setItem(`expanded_${id}`, 'true');
+      } else {
+        textContainer.classList.add('truncated');
+        btn.innerText = 'Show more';
+        localStorage.removeItem(`expanded_${id}`);
+      }
+    }
+
+    // Dynamically update card countdown labels
+    function updateSLADeadlineDisplays() {
+      state.reviews.forEach(review => {
+        const displayEl = document.getElementById(`sla-display-${review.id}`);
+        if (!displayEl || review.sla_hours === 0) return;
+
+        const createdTime = new Date(review.timestamp).getTime();
+        const targetTime = createdTime + (review.sla_hours * 3600000);
+        const now = Date.now();
+        const targetDateStr = new Date(targetTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        let text = '';
+        if (review.resolved) {
+          text = `Target Deadline: ${targetDateStr} (Resolved)`;
+          displayEl.classList.remove('at-risk');
+        } else if (now > targetTime) {
+          text = `Target Deadline: ${targetDateStr} <span style="font-weight: 700; color: var(--high-text);">[BREACHED]</span>`;
+          displayEl.classList.add('at-risk');
+        } else {
+          const diffMs = targetTime - now;
+          const hoursLeft = Math.floor(diffMs / 3600000);
+          const minsLeft = Math.floor((diffMs % 3600000) / 60000);
+          
+          let timeStr = `${hoursLeft}h ${minsLeft}m remaining`;
+          if (hoursLeft === 0) timeStr = `${minsLeft}m remaining`;
+          
+          text = `Deadline: ${targetDateStr} (${timeStr})`;
+          if (hoursLeft <= 4) {
+            displayEl.classList.add('at-risk');
+          } else {
+            displayEl.classList.remove('at-risk');
+          }
+        }
+        displayEl.querySelector('span').innerHTML = text;
+      });
+    }
+
+    // Toggle ticket status in feed and reload indicators
+    function toggleResolveReview(id) {
+      const index = state.reviews.findIndex(r => r.id === id);
+      if (index !== -1) {
+        state.reviews[index].resolved = !state.reviews[index].resolved;
+        localStorage.setItem('spinny_nps_reviews', JSON.stringify(state.reviews));
+        
+        showToast(state.reviews[index].resolved ? "Ticket marked as resolved." : "Ticket reopened.");
+        renderInbox();
+        updateGlobalBadges();
+      }
+    }
+
+    // Delete feedback ticket item
+    function deleteReview(id) {
+      if (confirm("Are you sure you want to delete this review card?")) {
+        state.reviews = state.reviews.filter(r => r.id !== id);
+        localStorage.setItem('spinny_nps_reviews', JSON.stringify(state.reviews));
+        
+        showToast("Review deleted successfully.");
+        renderInbox();
+        updateGlobalBadges();
+      }
+    }
+
+    // RENDER: DASHBOARD VIEW
+    function renderDashboard() {
+      // 1. Total processed reviews
+      const total = state.reviews.length;
+      document.getElementById('metric-total').innerText = total;
+
+      // 2. High priority open
+      const highPriorityTags = ['5DAY_BREACH', 'WARRANTY_DISPUTE'];
+      // A ticket is considered a "high priority open" if it has high priority tag (or rule priority HIGH) and is unresolved
+      const highOpenCount = state.reviews.filter(r => {
+        const isHigh = r.priority === 'HIGH' || highPriorityTags.includes(r.tag);
+        return isHigh && !r.resolved;
+      }).length;
+      document.getElementById('metric-high-open').innerText = highOpenCount;
+
+      // 3. Average confidence score
+      let avgConf = 0;
+      if (total > 0) {
+        const sum = state.reviews.reduce((acc, curr) => acc + (curr.confidence || 0), 0);
+        avgConf = Math.round(sum / total);
+      }
+      document.getElementById('metric-avg-conf').innerText = `${avgConf}%`;
+
+      // 4. SLA Breach Risk
+      // Count unresolved tickets where deadline has less than 4 hours remaining (or is already breached)
+      const now = Date.now();
+      const riskCount = state.reviews.filter(r => {
+        if (r.resolved || r.sla_hours === 0) return false;
+        const targetTime = new Date(r.timestamp).getTime() + (r.sla_hours * 3600000);
+        const timeRemaining = targetTime - now;
+        return timeRemaining <= 4 * 3600000; // Under 4 hours remaining (includes breached)
+      }).length;
+      document.getElementById('metric-sla-risk').innerText = riskCount;
+
+      // 5. Positive rate
+      const positiveCount = state.reviews.filter(r => r.tag === 'POSITIVE').length;
+      const positiveRate = total > 0 ? Math.round((positiveCount / total) * 100) : 0;
+      document.getElementById('metric-positive-rate').innerText = `${positiveRate}%`;
+
+      // 6. Most common complaint tag & Tag Distribution calculations
+      // Count current items in database
+      const tagCounts = {
+        WARRANTY_DISPUTE: 0,
+        RC_DELAY: 0,
+        EM_UNRESPONSIVE: 0,
+        QUALITY_MISMATCH: 0,
+        5DAY_BREACH: 0
+      };
+
+      state.reviews.forEach(r => {
+        if (tagCounts[r.tag] !== undefined) {
+          tagCounts[r.tag]++;
+        }
+      });
+
+      // Calculate total cumulative tags (Base counts + reviews in memory)
+      const cumulativeCounts = {};
+      let totalComplaintCounts = 0;
+
+      Object.keys(BASE_HISTORICAL_COUNTS).forEach(tag => {
+        cumulativeCounts[tag] = BASE_HISTORICAL_COUNTS[tag] + tagCounts[tag];
+        totalComplaintCounts += cumulativeCounts[tag];
+      });
+
+      // Find highest count category
+      let mostCommon = 'WARRANTY_DISPUTE';
+      let maxCount = -1;
+      Object.keys(cumulativeCounts).forEach(tag => {
+        if (cumulativeCounts[tag] > maxCount) {
+          maxCount = cumulativeCounts[tag];
+          mostCommon = tag;
+        }
+      });
+      document.getElementById('metric-common-tag').innerText = mostCommon;
+
+      // Render Distribution Bar Chart (CSS animated bars)
+      const chartContainer = document.getElementById('bar-chart-container');
+      chartContainer.innerHTML = '';
+
+      // Sorted order exactly as requested in specifications
+      const order = ['WARRANTY_DISPUTE', 'RC_DELAY', 'EM_UNRESPONSIVE', 'QUALITY_MISMATCH', '5DAY_BREACH'];
+      
+      order.forEach(tag => {
+        const count = cumulativeCounts[tag] || 0;
+        const percentage = totalComplaintCounts > 0 ? Math.round((count / totalComplaintCounts) * 100) : 0;
+        
+        const row = document.createElement('div');
+        row.className = 'chart-row';
+        row.innerHTML = `
+          <div class="chart-label">${tag.replace('_', ' ')}</div>
+          <div class="chart-bar-container">
+            <div class="chart-bar" id="bar-${tag}" style="width: 0%;"></div>
+          </div>
+          <div class="chart-percentage">${percentage}%</div>
+        `;
+        chartContainer.appendChild(row);
+
+        // Animate width after element insertion to trigger CSS transitions
+        setTimeout(() => {
+          const barEl = document.getElementById(`bar-${tag}`);
+          if (barEl) {
+            barEl.style.width = `${percentage}%`;
+          }
+        }, 50);
+      });
+
+      // Render Recent Activity Feed
+      renderRecentActivity();
+    }
+
+    // Secondary dashboard update helper to avoid full DOM redraws during timer ticks
+    function updateDashboardSLAIndicatorsOnly() {
+      const now = Date.now();
+      const riskCount = state.reviews.filter(r => {
+        if (r.resolved || r.sla_hours === 0) return false;
+        const targetTime = new Date(r.timestamp).getTime() + (r.sla_hours * 3600000);
+        return (targetTime - now) <= 4 * 3600000;
+      }).length;
+
+      const riskEl = document.getElementById('metric-sla-risk');
+      if (riskEl) riskEl.innerText = riskCount;
+    }
+
+    // Render activity feed in Dashboard
+    function renderRecentActivity() {
+      const activityContainer = document.getElementById('activity-feed');
+      activityContainer.innerHTML = '';
+
+      // Chronological sort: latest first
+      const sortedReviews = [...state.reviews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const displayList = sortedReviews.slice(0, 5); // Take last 5 classification events
+
+      if (displayList.length === 0) {
+        activityContainer.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px; text-align: center; padding: 20px 0;">No classification events logged.</div>';
+        return;
+      }
+
+      displayList.forEach(review => {
+        const timeVal = new Date(review.timestamp);
+        const timeFormatted = timeVal.toLocaleString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        let descText = '';
+        if (review.tag === 'POSITIVE') {
+          descText = `Feedback classified as <strong>POSITIVE</strong>. No dispatch action required.`;
+        } else {
+          descText = `Review classified as <strong>${review.tag}</strong> and routed to <strong>${review.routed_to}</strong>.`;
+        }
+
+        const sourceLabel = review.source && review.source.includes('Fallback') ? 'KEYWORD FALLBACK' : 'AI ENGINE';
+
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `
+          <div class="activity-meta">
+            <span class="activity-time">${timeFormatted}</span>
+            <span style="font-weight: 700; letter-spacing: 0.3px; color: ${sourceLabel.includes('KEYWORD') ? 'var(--medium-text)' : 'var(--text-secondary)'};">${sourceLabel}</span>
+          </div>
+          <div class="activity-desc">${descText}</div>
+        `;
+        activityContainer.appendChild(item);
+      });
+    }
+
+    // RENDER: ROUTING RULES
+    function renderRoutingRules() {
+      const tbody = document.getElementById('routing-rules-tbody');
+      tbody.innerHTML = '';
+
+      state.routingRules.forEach(rule => {
+        const isEditing = state.editingRuleTag === rule.tag;
+        
+        let priorityDisplay = `<strong>${rule.priority}</strong>`;
+        let routeDisplay = rule.routed_to;
+        let slaDisplay = `${rule.sla_hours} hours`;
+        let actionButtons = `<button class="action-btn" onclick="startEditRule('${rule.tag}')">Edit</button>`;
+
+        if (isEditing) {
+          priorityDisplay = `
+            <select class="edit-select" id="edit-rule-priority">
+              <option value="HIGH" ${rule.priority === 'HIGH' ? 'selected' : ''}>HIGH</option>
+              <option value="MEDIUM" ${rule.priority === 'MEDIUM' ? 'selected' : ''}>MEDIUM</option>
+              <option value="LOW" ${rule.priority === 'LOW' ? 'selected' : ''}>LOW</option>
+            </select>
+          `;
+          routeDisplay = `<input type="text" class="edit-input" id="edit-rule-route" value="${rule.routed_to}">`;
+          slaDisplay = `<input type="number" class="edit-input num-input" id="edit-rule-sla" value="${rule.sla_hours}" min="0">`;
+          actionButtons = `
+            <button class="action-btn" style="border-color: var(--positive-border); color: var(--positive-text); background-color: var(--positive-bg);" onclick="saveEditedRule('${rule.tag}')">Save</button>
+            <button class="action-btn" onclick="cancelEditRule()" style="margin-left: 4px;">Cancel</button>
+          `;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="rule-tag-name">${rule.tag}</span></td>
+          <td>${priorityDisplay}</td>
+          <td>${routeDisplay}</td>
+          <td>${slaDisplay}</td>
+          <td style="text-align: center; white-space: nowrap;">${actionButtons}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function startEditRule(tag) {
+      state.editingRuleTag = tag;
+      renderRoutingRules();
+    }
+
+    function cancelEditRule() {
+      state.editingRuleTag = null;
+      renderRoutingRules();
+    }
+
+    function saveEditedRule(tag) {
+      const priority = document.getElementById('edit-rule-priority').value;
+      const routed_to = document.getElementById('edit-rule-route').value.trim();
+      const sla_hours = parseInt(document.getElementById('edit-rule-sla').value, 10);
+
+      if (!routed_to) {
+        showToast("Error: Routed destination team cannot be empty.", true);
+        return;
+      }
+      if (isNaN(sla_hours) || sla_hours < 0) {
+        showToast("Error: SLA target hours must be a non-negative number.", true);
+        return;
+      }
+
+      const index = state.routingRules.findIndex(r => r.tag === tag);
+      if (index !== -1) {
+        state.routingRules[index].priority = priority;
+        state.routingRules[index].routed_to = routed_to;
+        state.routingRules[index].sla_hours = sla_hours;
+
+        localStorage.setItem('spinny_nps_routing_rules', JSON.stringify(state.routingRules));
+        showToast(`Rule updated for tag ${tag}.`);
+        state.editingRuleTag = null;
+        
+        renderRoutingRules();
+        renderDashboard(); // Update calculations since priorities or tag SLAs may change counts
+      }
+    }
+
+    // RENDER: SETTINGS ACTIONS
+    function saveSettings() {
+      const apiKey = document.getElementById('settings-api-key').value.trim();
+      const model = document.getElementById('settings-model').value;
+      const prompt = document.getElementById('settings-prompt').value.trim();
+
+      if (!prompt) {
+        showToast("Error: Classification system prompt cannot be empty.", true);
+        return;
+      }
+
+      state.settings.apiKey = apiKey;
+      state.settings.model = model;
+      state.settings.systemPrompt = prompt;
+
+      localStorage.setItem('spinny_nps_settings', JSON.stringify(state.settings));
+      showToast("Settings saved successfully.");
+    }
+
+    // Reset database to initial preload setup
+    function resetToDefaults() {
+      if (confirm("This will clear all processed reviews, custom routing rules, and configurations. Proceed?")) {
+        localStorage.removeItem('spinny_nps_reviews');
+        localStorage.removeItem('spinny_nps_routing_rules');
+        localStorage.removeItem('spinny_nps_settings');
+        
+        // Remove individual expand-collapse states
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('expanded_')) {
+            localStorage.removeItem(key);
+          }
+        });
+
+        loadState();
+        renderInbox();
+        renderDashboard();
+        renderRoutingRules();
+        updateGlobalBadges();
+        showToast("Application state reset to system default.");
+      }
+    }
+
+    // EXPORTS UTILITIES
+    function exportInboxCSV() {
+      if (state.reviews.length === 0) {
+        showToast("Error: No data available in inbox to export.", true);
+        return;
+      }
+
+      const headers = ["ID", "Timestamp", "Source", "Tag", "Confidence", "Priority", "Routed To", "SLA Hours", "Summary", "Review Text", "Status"];
+      
+      const rows = state.reviews.map(r => [
+        r.id,
+        r.timestamp,
+        r.source || 'AI Engine',
+        r.tag,
+        r.confidence,
+        r.priority,
+        r.routed_to,
+        r.sla_hours,
+        r.summary,
+        r.review_text,
+        r.resolved ? 'RESOLVED' : 'OPEN'
+      ]);
+
+      const csvContent = [
+        headers.map(escapeCSVField).join(","),
+        ...rows.map(row => row.map(escapeCSVField).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `spinny_nps_reviews_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showToast("CSV file exported successfully.");
+    }
+
+    function escapeCSVField(val) {
+      if (val === undefined || val === null) return '';
+      let str = String(val);
+      // Escape inner quotes by doubling them, wrap field in quotes if commas, quotes or linebreaks exist
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    function copyRoutingJSON() {
+      try {
+        const jsonStr = JSON.stringify(state.routingRules, null, 2);
+        navigator.clipboard.writeText(jsonStr)
+          .then(() => {
+            showToast("Routing rules copied to clipboard as JSON.");
+          })
+          .catch(err => {
+            console.error("Clipboard copy error: ", err);
+            // Fallback selection copy
+            const textarea = document.createElement('textarea');
+            textarea.value = jsonStr;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast("Routing rules copied to clipboard (fallback).");
+          });
+      } catch (e) {
+        showToast("Error: Failed to copy routing rules.", true);
+      }
+    }
+
+    // TOAST NOTIFICATIONS
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${isError ? 'error' : ''}`;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+      `;
+      container.appendChild(toast);
+
+      // Auto dismiss after 3.5 seconds
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s ease-out';
+        toast.style.opacity = 0;
+        setTimeout(() => toast.remove(), 500);
+      }, 3500);
+    }
+
+    // CLASSIFICATION & ROUTING HANDLERS
+    async function handleClassifyAndRoute() {
+      const reviewInput = document.getElementById('review-input');
+      const reviewText = reviewInput.value.trim();
+      const classifyBtn = document.getElementById('classify-btn');
+      const btnText = document.getElementById('btn-text');
+
+      if (!reviewText) {
+        showToast("Error: Please enter or paste customer review text before routing.", true);
+        return;
+      }
+
+      // Set Loading State
+      classifyBtn.disabled = true;
+      btnText.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite; margin-right: 4px; display: inline-block;">
+          <line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          <line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line>
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+        Routing...
+      `;
+      // Inject CSS spinning style
+      if (!document.getElementById('spin-keyframe')) {
+        const style = document.createElement('style');
+        style.id = 'spin-keyframe';
+        style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+      }
+
+      let result = null;
+
+      try {
+        // Build call details
+        const systemPrompt = state.settings.systemPrompt;
+        const apiKey = state.settings.apiKey;
+        const selectedModel = state.settings.model;
+
+        // Perform Claude API Request
+        // In client-side environments with automated auth, we omit Authorization/x-api-key unless user supplies override key
+        const headers = {
+          'content-type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'dangerously-allow-html-user-agent': 'true'
+        };
+
+        if (apiKey && apiKey !== 'Using session key' && apiKey.trim() !== '') {
+          headers['x-api-key'] = apiKey;
+        }
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            model: selectedModel,
+            max_tokens: 1000,
+            system: systemPrompt,
+            messages: [
+              {
+                role: 'user',
+                content: reviewText
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API HTTP Error: Status ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        if (responseData.content && responseData.content[0] && responseData.content[0].text) {
+          const rawText = responseData.content[0].text;
+          result = parseAIResponse(rawText);
+          result.source = "Claude AI Engine";
+        } else {
+          throw new Error("Invalid payload response structure from Anthropic API.");
+        }
+      } catch (e) {
+        console.error("AI classification failed, running keyword fallback: ", e);
+        showToast("AI Request failed. Using keyword-based fallback classifier.", true);
+        result = classifyKeywordFallback(reviewText);
+      }
+
+      // Enrich result with current routing rule values to support customized configurations
+      result = enrichWithRules(result);
+
+      // Create new ticket object
+      const newTicket = {
+        id: "ticket-" + Date.now(),
+        review_text: reviewText,
+        tag: result.tag,
+        confidence: result.confidence,
+        sla_hours: result.sla_hours,
+        routed_to: result.routed_to,
+        priority: result.priority,
+        summary: result.summary,
+        timestamp: new Date().toISOString(),
+        resolved: false,
+        source: result.source
+      };
+
+      // Add to state and save
+      state.reviews.unshift(newTicket);
+      localStorage.setItem('spinny_nps_reviews', JSON.stringify(state.reviews));
+
+      // Clean textarea and reset button status
+      reviewInput.value = "";
+      classifyBtn.disabled = false;
+      btnText.innerText = "Classify and route";
+
+      // Alert success & Re-render interface
+      showToast(`Review classified as ${newTicket.tag} and routed to ${newTicket.routed_to}.`);
+      updateGlobalBadges();
+      renderInbox();
+      renderDashboard();
+    }
+
+    // Helper: Parse raw JSON output string from Claude API
+    function parseAIResponse(text) {
+      let cleaned = text.trim();
+      // Remove any surrounding markdown tags if the model returned them
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+      }
+      
+      try {
+        return JSON.parse(cleaned);
+      } catch (err) {
+        console.error("Failed parsing Claude JSON, extracting keys via regex fallback:", err);
+        
+        // Secondary regex extract fallback to avoid full fail if json has slight syntax problems
+        const tagMatch = cleaned.match(/"tag"\s*:\s*"([^"]+)"/);
+        const confidenceMatch = cleaned.match(/"confidence"\s*:\s*(\d+)/);
+        const slaMatch = cleaned.match(/"sla_hours"\s*:\s*(\d+)/);
+        const routeMatch = cleaned.match(/"routed_to"\s*:\s*"([^"]+)"/);
+        const priorityMatch = cleaned.match(/"priority"\s*:\s*"([^"]+)"/);
+        const summaryMatch = cleaned.match(/"summary"\s*:\s*"([^"]+)"/);
+
+        return {
+          tag: tagMatch ? tagMatch[1] : "QUALITY_MISMATCH",
+          confidence: confidenceMatch ? parseInt(confidenceMatch[1], 10) : 75,
+          sla_hours: slaMatch ? parseInt(slaMatch[1], 10) : 24,
+          routed_to: routeMatch ? routeMatch[1] : "Hub Manager",
+          priority: priorityMatch ? priorityMatch[1] : "LOW",
+          summary: summaryMatch ? summaryMatch[1] : "Processed feedback complaint details.",
+          source: "Claude AI (Regex Parsed)"
+        };
+      }
+    }
+
+    // Helper: Local Keyword Classifier Fallback
+    function classifyKeywordFallback(text) {
+      const lowercaseText = text.toLowerCase();
+      let tag = 'QUALITY_MISMATCH'; // fallback catch-all
+
+      if (lowercaseText.includes('warranty') || lowercaseText.includes('repair')) {
+        tag = 'WARRANTY_DISPUTE';
+      } else if (lowercaseText.includes('rc') || lowercaseText.includes('registration') || lowercaseText.includes('document')) {
+        tag = 'RC_DELAY';
+      } else if (lowercaseText.includes('5 day') || lowercaseText.includes('guarantee') || lowercaseText.includes('refund')) {
+        tag = '5DAY_BREACH';
+      } else if (lowercaseText.includes('experience manager') || lowercaseText.includes('no response') || lowercaseText.includes('not responding')) {
+        tag = 'EM_UNRESPONSIVE';
+      } else if (lowercaseText.includes('nice') || lowercaseText.includes('smooth') || lowercaseText.includes('cooperative') || lowercaseText.includes('great experience')) {
+        // Add supportive keyword trigger for POSITIVE tags
+        tag = 'POSITIVE';
+      }
+
+      // Form simplified summaries matching fallback tags
+      let summary = "";
+      switch (tag) {
+        case 'WARRANTY_DISPUTE':
+          summary = "Customer reports issue regarding car mechanical repairs and warranty service reliability.";
+          break;
+        case 'RC_DELAY':
+          summary = "Customer reports substantial delay in documentation and RC transfer processing.";
+          break;
+        case '5DAY_BREACH':
+          summary = "Customer claims a violation or delay concerning Spinny's 5-day money-back guarantee policy.";
+          break;
+        case 'EM_UNRESPONSIVE':
+          summary = "Customer expresses frustration with an uncommunicative or unresponsive experience manager.";
+          break;
+        case 'POSITIVE':
+          summary = "Customer leaves a positive review highlighting a smooth purchasing journey.";
+          break;
+        default:
+          summary = "Customer details quality issues with the car or hub operational mismatch.";
+      }
+
+      return {
+        tag: tag,
+        confidence: 70, // static fallback confidence percentage
+        sla_hours: 24, // initialized default to override later
+        routed_to: "Hub Manager", // initialized default to override later
+        priority: "LOW", // initialized default to override later
+        summary: summary,
+        source: "Keyword Classifier Fallback"
+      };
+    }
+
+    // Helper: Enrich classified review details using live local routing rules settings
+    function enrichWithRules(result) {
+      const liveRule = state.routingRules.find(r => r.tag === result.tag);
+      if (liveRule) {
+        result.priority = liveRule.priority;
+        result.routed_to = liveRule.routed_to;
+        result.sla_hours = liveRule.sla_hours;
+      } else if (result.tag === 'POSITIVE') {
+        result.priority = 'LOW';
+        result.routed_to = 'No action';
+        result.sla_hours = 0;
+      }
+      return result;
+    }
+  </script>
+</body>
+</html>
