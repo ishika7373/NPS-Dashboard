@@ -1220,7 +1220,7 @@
           <div class="settings-form-group">
             <label for="settings-api-key">Anthropic API Key</label>
             <input type="password" id="settings-api-key" value="">
-            <div class="form-tip">Pre-filled with session details. Leave blank to let the environment handle auth automatically.</div>
+            <div class="form-tip">Enter your Anthropic API Key to enable AI classification. If left blank, the app will automatically use keyword-based fallback classification.</div>
           </div>
 
           <div class="settings-form-group">
@@ -1347,6 +1347,11 @@
       const savedSettings = localStorage.getItem('spinny_nps_settings');
       if (savedSettings) {
         state.settings = JSON.parse(savedSettings);
+        // Clean legacy placeholder key if present
+        if (state.settings.apiKey === "Using session key") {
+          state.settings.apiKey = "";
+          localStorage.setItem('spinny_nps_settings', JSON.stringify(state.settings));
+        }
         // Migrate legacy invalid model name to a valid current model
         if (state.settings.model === "claude-sonnet-4-20250514") {
           state.settings.model = "claude-3-5-sonnet-latest";
@@ -1354,7 +1359,7 @@
         }
       } else {
         state.settings = {
-          apiKey: "Using session key",
+          apiKey: "",
           model: "claude-3-5-sonnet-latest",
           systemPrompt: DEFAULT_SYSTEM_PROMPT
         };
@@ -2153,65 +2158,67 @@
       }
 
       let result = null;
+      const systemPrompt = state.settings.systemPrompt;
+      const apiKey = state.settings.apiKey ? state.settings.apiKey.trim() : '';
+      const selectedModel = state.settings.model;
 
-      try {
-        // Build call details
-        const systemPrompt = state.settings.systemPrompt;
-        const apiKey = state.settings.apiKey;
-        const selectedModel = state.settings.model;
+      const hasValidKey = apiKey && apiKey !== 'Using session key' && apiKey !== '';
 
-        // Perform Claude API Request
-        // In client-side environments with automated auth, we omit Authorization/x-api-key unless user supplies override key
-        const headers = {
-          'content-type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'dangerously-allow-html-user-agent': 'true',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        };
-
-        if (apiKey && apiKey !== 'Using session key' && apiKey.trim() !== '') {
-          headers['x-api-key'] = apiKey;
-        }
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({
-            model: selectedModel,
-            max_tokens: 1000,
-            system: systemPrompt,
-            messages: [
-              {
-                role: 'user',
-                content: reviewText
-              }
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          let errorMsg = `Status ${response.status}`;
-          try {
-            const errJson = await response.json();
-            if (errJson && errJson.error && errJson.error.message) {
-              errorMsg = errJson.error.message;
-            }
-          } catch (_) {}
-          throw new Error(errorMsg);
-        }
-
-        const responseData = await response.json();
-        if (responseData.content && responseData.content[0] && responseData.content[0].text) {
-          const rawText = responseData.content[0].text;
-          result = parseAIResponse(rawText);
-          result.source = "Claude AI Engine";
-        } else {
-          throw new Error("Invalid payload response structure from Anthropic API.");
-        }
-      } catch (e) {
-        console.error("AI classification failed, running keyword fallback: ", e);
-        showToast(`AI Request failed: ${e.message}. Using keyword-based fallback classifier.`, true);
+      if (!hasValidKey) {
+        // Handle fallback directly when no API key is specified, avoiding failed network calls and errors
         result = classifyKeywordFallback(reviewText);
+        result.source = "Keyword Classifier Fallback";
+        showToast("Using keyword fallback classifier (no API key configured).");
+      } else {
+        try {
+          const headers = {
+            'content-type': 'application/json',
+            'anthropic-version': '2023-06-01',
+            'dangerously-allow-html-user-agent': 'true',
+            'anthropic-dangerous-direct-browser-access': 'true',
+            'x-api-key': apiKey
+          };
+
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+              model: selectedModel,
+              max_tokens: 1000,
+              system: systemPrompt,
+              messages: [
+                {
+                  role: 'user',
+                  content: reviewText
+                }
+              ]
+            })
+          });
+
+          if (!response.ok) {
+            let errorMsg = `Status ${response.status}`;
+            try {
+              const errJson = await response.json();
+              if (errJson && errJson.error && errJson.error.message) {
+                errorMsg = errJson.error.message;
+              }
+            } catch (_) {}
+            throw new Error(errorMsg);
+          }
+
+          const responseData = await response.json();
+          if (responseData.content && responseData.content[0] && responseData.content[0].text) {
+            const rawText = responseData.content[0].text;
+            result = parseAIResponse(rawText);
+            result.source = "Claude AI Engine";
+          } else {
+            throw new Error("Invalid payload response structure from Anthropic API.");
+          }
+        } catch (e) {
+          console.error("AI classification failed, running keyword fallback: ", e);
+          showToast(`AI Request failed: ${e.message}. Using keyword-based fallback classifier.`, true);
+          result = classifyKeywordFallback(reviewText);
+        }
       }
 
       // Enrich result with current routing rule values to support customized configurations
@@ -2451,8 +2458,10 @@
 
         let successCount = 0;
         const systemPrompt = state.settings.systemPrompt;
-        const apiKey = state.settings.apiKey;
+        const apiKey = state.settings.apiKey ? state.settings.apiKey.trim() : '';
         const selectedModel = state.settings.model;
+
+        const hasValidKey = apiKey && apiKey !== 'Using session key' && apiKey !== '';
 
         for (let i = 0; i < reviewsToImport.length; i++) {
           if (csvImportCancelled) break;
@@ -2462,51 +2471,53 @@
           progressBar.style.width = `${Math.round((i / reviewsToImport.length) * 100)}%`;
 
           let result = null;
-          try {
-            const headers = {
-              'content-type': 'application/json',
-              'anthropic-version': '2023-06-01',
-              'dangerously-allow-html-user-agent': 'true',
-              'anthropic-dangerous-direct-browser-access': 'true'
-            };
-            if (apiKey && apiKey !== 'Using session key' && apiKey.trim() !== '') {
-              headers['x-api-key'] = apiKey;
-            }
-
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: headers,
-              body: JSON.stringify({
-                model: selectedModel,
-                max_tokens: 1000,
-                system: systemPrompt,
-                messages: [{ role: 'user', content: reviewText }]
-              })
-            });
-
-            if (response.ok) {
-              const responseData = await response.json();
-              const rawText = responseData.content[0].text;
-              result = parseAIResponse(rawText);
-              result.source = "Claude AI Engine (CSV)";
-            } else {
-              let errorMsg = `Status ${response.status}`;
-              try {
-                const errJson = await response.json();
-                if (errJson && errJson.error && errJson.error.message) {
-                  errorMsg = errJson.error.message;
-                }
-              } catch (_) {}
-              throw new Error(errorMsg);
-            }
-          } catch (err) {
-            console.error("CSV AI Classification failed, running fallback:", err);
-            // Show a single toast warning for bulk import failures to inform the user
-            if (successCount === 0) {
-              showToast(`CSV AI Classification failed: ${err.message}. Using keyword fallback.`, true);
-            }
+          if (!hasValidKey) {
             result = classifyKeywordFallback(reviewText);
             result.source = "Keyword Fallback (CSV)";
+          } else {
+            try {
+              const headers = {
+                'content-type': 'application/json',
+                'anthropic-version': '2023-06-01',
+                'dangerously-allow-html-user-agent': 'true',
+                'anthropic-dangerous-direct-browser-access': 'true',
+                'x-api-key': apiKey
+              };
+
+              const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                  model: selectedModel,
+                  max_tokens: 1000,
+                  system: systemPrompt,
+                  messages: [{ role: 'user', content: reviewText }]
+                })
+              });
+
+              if (response.ok) {
+                const responseData = await response.json();
+                const rawText = responseData.content[0].text;
+                result = parseAIResponse(rawText);
+                result.source = "Claude AI Engine (CSV)";
+              } else {
+                let errorMsg = `Status ${response.status}`;
+                try {
+                  const errJson = await response.json();
+                  if (errJson && errJson.error && errJson.error.message) {
+                    errorMsg = errJson.error.message;
+                  }
+                } catch (_) {}
+                throw new Error(errorMsg);
+              }
+            } catch (err) {
+              console.error("CSV AI Classification failed, running fallback:", err);
+              if (successCount === 0) {
+                showToast(`CSV AI Classification failed: ${err.message}. Using keyword fallback.`, true);
+              }
+              result = classifyKeywordFallback(reviewText);
+              result.source = "Keyword Fallback (CSV)";
+            }
           }
 
           result = enrichWithRules(result);
