@@ -2160,7 +2160,8 @@
         const headers = {
           'content-type': 'application/json',
           'anthropic-version': '2023-06-01',
-          'dangerously-allow-html-user-agent': 'true'
+          'dangerously-allow-html-user-agent': 'true',
+          'anthropic-dangerous-direct-browser-access': 'true'
         };
 
         if (apiKey && apiKey !== 'Using session key' && apiKey.trim() !== '') {
@@ -2453,7 +2454,8 @@
             const headers = {
               'content-type': 'application/json',
               'anthropic-version': '2023-06-01',
-              'dangerously-allow-html-user-agent': 'true'
+              'dangerously-allow-html-user-agent': 'true',
+              'anthropic-dangerous-direct-browser-access': 'true'
             };
             if (apiKey && apiKey !== 'Using session key' && apiKey.trim() !== '') {
               headers['x-api-key'] = apiKey;
